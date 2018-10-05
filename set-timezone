@@ -1,0 +1,20 @@
+#! /bin/sh
+
+set -e
+
+DBURL="http://geoip.nekudo.com/api/"
+
+# query geoip database on boot and set the timezone accordingly
+while ! wget -q -O- $DBURL >/dev/null 2>&1; do
+    echo "can not reach $DBURL, sleeping for 30 sec"
+	sleep 30
+done
+
+MYTZ="$(wget -q -O- $DBURL|grep time_zone|sed -s 's/^.*time_zone":"//;s/".*$//;s/\\//')"
+
+while ! timedatectl set-timezone "$MYTZ"; do
+    echo "timezone control interface not connected yet, please run:"
+    echo "snap connect $SNAP_NAME:timezone-control"
+    echo "sleeping for 10 sec"
+    sleep 10
+done
