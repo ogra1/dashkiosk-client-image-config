@@ -1,0 +1,7 @@
+#! /bin/sh
+
+if ! grep -q snap_core= /proc/cmdline; then
+    echo "This snap can only be used on UbuntuCore images"
+    echo "Refusing installation on Ubuntu Classic !"
+    exit 1
+fi
