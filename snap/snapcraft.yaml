@@ -2,40 +2,57 @@ name: dashkiosk-client-image-config
 version: '0.1'
 summary: Basic configuration for a dashkiosk appliance client
 description: |
-  This snap carries basic configuration for a dashkiosk based appliance
-  client image.
+  This snap carries out basic configuration for an UbuntuCore appliance
+  image. It sets the default hostname and avahi name, looks up the
+  correct timezone via geoip and provides a daemon that auto-imports
+  a netplan.yaml file from USB key to set up a WLAN connetion
+  if desired.
 
 grade: stable
 confinement: strict
 
 apps:
-  setup:
-    command: bin/setup.sh
-    daemon: simple
+  set-name:
+    command: bin/set-name
+    daemon: oneshot
     plugs:
-      - network
-      - network-bind
-      - network-control
-      - network-setup-control
       - hostname-control
       - avahi-observe
       - avahi-control
   set-timezone:
     command: bin/set-timezone
-    daemon: simple
+    daemon: oneshot
     plugs:
       - network
       - network-bind
       - timezone-control
+  netplan-import:
+    command: bin/netplan-import
+    daemon: simple
+    slots: [ udisks2 ]
+    plugs:
+      - system-observe
+      - hardware-observe
+      - mount-observe
+      - network-setup-control
+      - removable-media
+      - shutdown
+      - mount-plug
+
+plugs:
+  mount-plug:
+    interface: udisks2
 
 parts:
   config:
     plugin: nil
     override-build: |
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      cp -av setup.sh $SNAPCRAFT_PART_INSTALL/bin/
+      cp -av set-name $SNAPCRAFT_PART_INSTALL/bin/
       cp -av set-timezone $SNAPCRAFT_PART_INSTALL/bin/
+      cp -av netplan-import $SNAPCRAFT_PART_INSTALL/bin/
     stage-packages:
-      - netcat-openbsd
       - avahi-utils
+      - netcat-openbsd
+      - udisks2
       - wget

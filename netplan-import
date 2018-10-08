@@ -1,0 +1,32 @@
+#! /bin/sh
+
+set -e
+
+getnode() {
+    # get device node for syspath entry
+    udevadm info -p /sys/"$1" | grep --line-buffered DEVNAME= | sed 's/^.*DEVNAME=//'
+}
+
+# monitor block devices via udev
+stdbuf -oL -- udevadm monitor --udev -s block | while read -r -- _ _ event devpath _; do
+
+    # catch add events for devices
+    if [ "$event" = add ]; then
+        devname=$(getnode "$devpath")
+
+        # only partitions ...
+        if echo $devname|grep -q '[0-9]$'; then
+            echo "mounting $devname"
+            #udisksctl mount --block-device "$devname" --no-user-interaction
+
+            # find netplan.yaml on /media/
+
+            # copy netplan.yaml over /etc/netplan/00-snapd-config.yaml
+
+            # reboot
+            dbus-send --system --print-reply \
+                --dest=org.freedesktop.login1 /org/freedesktop/login1 \
+                "org.freedesktop.login1.Manager.Reboot" boolean:true
+        fi
+    fi
+done
