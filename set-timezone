@@ -2,7 +2,7 @@
 
 set -e
 
-DBURL="http://geoip.nekudo.com/api/"
+DBURL="http://www.geoplugin.net/csv.gp?ip="
 
 # query geoip database on boot and set the timezone accordingly
 while ! wget -q -O- $DBURL >/dev/null 2>&1; do
@@ -10,7 +10,7 @@ while ! wget -q -O- $DBURL >/dev/null 2>&1; do
     sleep 30
 done
 
-MYTZ="$(wget -q -O- $DBURL|grep time_zone|sed -s 's/^.*time_zone":"//;s/".*$//;s/\\//')"
+MYTZ="$(wget -q -O- $DBURL|grep geoplugin_timezone|sed 's/geoplugin_timezone,//')"
 
 while ! timedatectl set-timezone "$MYTZ"; do
     echo "timezone control interface not connected yet, please run:"
