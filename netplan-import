@@ -17,33 +17,27 @@ stdbuf -oL -- udevadm monitor --udev -s block | while read -r -- _ _ event devpa
         # only partitions ...
         if echo $devname|grep -q '[0-9]$'; then
 
-            echo "starting udisksd"
-            if [ "$($SNAP/usr/lib/udisks2/udisksd -n & echo $?)" = "0" ]; then
+            echo "mounting $devname"
+            sleep 2 # give udisksd time to start up
+            udisksctl mount --block-device "$devname" --no-user-interaction
 
-                echo "mounting $devname"
-                sleep 2 # give udisksd time to start up
-                udisksctl mount --block-device "$devname" --no-user-interaction
+            DIR="$(udisksctl info --block-device "$devname"|grep MountPoints:| sed 's/MountPoints: //')"
 
-                DIR="$(udisksctl info --block-device "$devname"|grep MountPoints:| sed 's/MountPoints: //')"
-
-                if ls -lha $DIR/netplan.yaml >/dev/null 2>&1; then
-                    echo "copying netplan.yaml in place"
-                    cp -av $DIR/netplan.yaml /etc/netplan/00-snapd-config.yaml
-
-                    echo "unmounting $devname"
-                    udisksctl unmount --block-device "$devname" --no-user-interaction
-
-                    #echo "rebooting for netplan generate/apply"
-                    dbus-send --system --print-reply \
-                        --dest=org.freedesktop.login1 /org/freedesktop/login1 \
-                        "org.freedesktop.login1.Manager.Reboot" boolean:true
-                fi
+            if ls -lha $DIR/netplan.yaml >/dev/null 2>&1; then
+                echo "copying netplan.yaml in place"
+                cp -av $DIR/netplan.yaml /etc/netplan/00-snapd-config.yaml
 
                 echo "unmounting $devname"
-                udisksctl unmount --block-device "$devname" --no-user-interaction || true
+                udisksctl unmount --block-device "$devname" --no-user-interaction
+
+                #echo "rebooting for netplan generate/apply"
+                dbus-send --system --print-reply \
+                    --dest=org.freedesktop.login1 /org/freedesktop/login1 \
+                    "org.freedesktop.login1.Manager.Reboot" boolean:true
             fi
-            echo "stopping udisksd"
-            pkill udisksd
+
+            echo "unmounting $devname"
+            udisksctl unmount --block-device "$devname" --no-user-interaction || true
         fi
     fi
 done

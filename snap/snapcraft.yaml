@@ -29,7 +29,6 @@ apps:
   netplan-import:
     command: bin/netplan-import
     daemon: simple
-    slots: [ udisks2 ]
     plugs:
       - system-observe
       - hardware-observe
@@ -37,11 +36,7 @@ apps:
       - network-setup-control
       - removable-media
       - shutdown
-      - mount-plug
-
-plugs:
-  mount-plug:
-    interface: udisks2
+      - udisks2
 
 parts:
   config:
