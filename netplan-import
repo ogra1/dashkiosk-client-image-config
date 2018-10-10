@@ -7,8 +7,8 @@ getnode() {
     udevadm info -p /sys/"$1" | grep --line-buffered DEVNAME= | sed 's/^.*DEVNAME=//'
 }
 
-while ! udevadm info --version >/dev/null 2>&1; do
-    echo "hardware-observe interface not connected, sleeping for 10 sec"
+while ! lsblk >/dev/null 2>&1; do
+    echo "hardware-observe interface not yet connected, sleeping for 10 sec"
     sleep 10
 done
 
