@@ -7,6 +7,11 @@ getnode() {
     udevadm info -p /sys/"$1" | grep --line-buffered DEVNAME= | sed 's/^.*DEVNAME=//'
 }
 
+while ! udevadm info --version >/dev/null 2>&1; do
+    echo "hardware-observe interface not connected, sleeping for 10 sec"
+    sleep 10
+done
+
 # monitor block devices via udev
 stdbuf -oL -- udevadm monitor --udev -s block | while read -r -- _ _ event devpath _; do
 
@@ -16,6 +21,8 @@ stdbuf -oL -- udevadm monitor --udev -s block | while read -r -- _ _ event devpa
 
         # only partitions ...
         if echo $devname|grep -q '[0-9]$'; then
+
+            sleep 5
 
             echo "mounting $devname"
             udisksctl mount --block-device "$devname" --no-user-interaction
