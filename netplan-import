@@ -17,33 +17,37 @@ stdbuf -oL -- udevadm monitor --udev -s block | while read -r -- _ _ event devpa
 
     # catch add events for devices
     if [ "$event" = add ]; then
-        devname=$(getnode "$devpath")
 
-        # only partitions ...
-        if echo $devname|grep -q '[0-9]$'; then
+        # filter out non-usb devices
+        if echo $devpath|grep -q usb; then
+            devname=$(getnode "$devpath")
 
-            sleep 5
+            # only partitions ...
+            if echo $devname|grep -q '[0-9]$'; then
 
-            echo "mounting $devname"
-            udisksctl mount --block-device "$devname" --no-user-interaction
+                sleep 5
 
-            DIR="$(udisksctl info --block-device "$devname"|grep MountPoints:| sed 's/MountPoints: //')"
+                echo "mounting $devname"
+                udisksctl mount --block-device "$devname" --no-user-interaction
 
-            if ls -lha $DIR/netplan.yaml >/dev/null 2>&1; then
-                echo "copying netplan.yaml in place"
-                cp -av $DIR/netplan.yaml /etc/netplan/00-snapd-config.yaml
+                DIR="$(udisksctl info --block-device "$devname"|grep MountPoints:| sed 's/MountPoints: //')"
+
+                if ls -lha $DIR/netplan.yaml >/dev/null 2>&1; then
+                    echo "copying netplan.yaml in place"
+                    cp -av $DIR/netplan.yaml /etc/netplan/00-snapd-config.yaml
+
+                    echo "unmounting $devname"
+                    udisksctl unmount --block-device "$devname" --no-user-interaction
+
+                    #echo "rebooting for netplan generate/apply"
+                    dbus-send --system --print-reply \
+                        --dest=org.freedesktop.login1 /org/freedesktop/login1 \
+                        "org.freedesktop.login1.Manager.Reboot" boolean:true
+                fi
 
                 echo "unmounting $devname"
-                udisksctl unmount --block-device "$devname" --no-user-interaction
-
-                #echo "rebooting for netplan generate/apply"
-                dbus-send --system --print-reply \
-                    --dest=org.freedesktop.login1 /org/freedesktop/login1 \
-                    "org.freedesktop.login1.Manager.Reboot" boolean:true
+                udisksctl unmount --block-device "$devname" --no-user-interaction || true
             fi
-
-            echo "unmounting $devname"
-            udisksctl unmount --block-device "$devname" --no-user-interaction || true
         fi
     fi
 done
