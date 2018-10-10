@@ -17,8 +17,10 @@ stdbuf -oL -- udevadm monitor --udev -s block | while read -r -- _ _ event devpa
         # only partitions ...
         if echo $devname|grep -q '[0-9]$'; then
 
+            echo "detected $devname sleeping for 30sec to allow assetrtion importer to finish"
+            sleep 30 # the assertion importer might run, give it some time
+
             echo "mounting $devname"
-            sleep 2 # give udisksd time to start up
             udisksctl mount --block-device "$devname" --no-user-interaction
 
             DIR="$(udisksctl info --block-device "$devname"|grep MountPoints:| sed 's/MountPoints: //')"
