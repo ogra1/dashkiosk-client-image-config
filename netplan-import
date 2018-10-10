@@ -25,8 +25,6 @@ stdbuf -oL -- udevadm monitor --udev -s block | while read -r -- _ _ event devpa
             # only partitions ...
             if echo $devname|grep -q '[0-9]$'; then
 
-                sleep 5
-
                 echo "mounting $devname"
                 udisksctl mount --block-device "$devname" --no-user-interaction
 
