@@ -8,16 +8,16 @@ fi
 
 NAME="dashkiosk-client"
 
+while ! avahi-set-host-name $NAME 2>/dev/null; do
+	echo "setup: avahi-control interface not connected, sleeping 30 for sec"
+	sleep 30
+done
+
 if grep -q localhost.localdomain /etc/hostname; then
     while ! /usr/bin/hostnamectl set-hostname $NAME 2>/dev/null; do
 		echo "setup: waiting for hostname-control interface, sleeping 10 sec"
 		sleep 10
     done
 fi
-
-while ! avahi-set-host-name $NAME 2>/dev/null; do
-	echo "setup: avahi-control interface not connected, sleeping 30 for sec"
-	sleep 30
-done
 
 touch $SNAP_DATA/name-set
