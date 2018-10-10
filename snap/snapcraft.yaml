@@ -14,14 +14,14 @@ confinement: strict
 apps:
   set-name:
     command: bin/set-name
-    daemon: oneshot
+    daemon: simple
     plugs:
       - hostname-control
       - avahi-observe
       - avahi-control
   set-timezone:
     command: bin/set-timezone
-    daemon: oneshot
+    daemon: simple
     plugs:
       - network
       - network-bind
