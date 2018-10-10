@@ -8,8 +8,9 @@ getnode() {
 }
 
 while ! lsblk >/dev/null 2>&1; do
-    echo "hardware-observe interface not yet connected, sleeping for 10 sec"
-    sleep 10
+    echo "hardware-observe interface not yet connected, exiting"
+    sleep 1
+    exit 1
 done
 
 # monitor block devices via udev
